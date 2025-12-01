@@ -26,6 +26,25 @@ python diaster_sim.py
 - **Interactive Mode:** If run on a machine with a display, a window will open showing the animation.
 - **Headless Mode:** If run on a server or without a display, it will automatically save the animation as `civilian_vectors_safe.mp4`.
 
+## Physics & Vector Calculus Concepts
+
+This simulation relies on three key vector calculus concepts to model the environment and agent behavior:
+
+1.  **Gradient (Slope)**:
+    -   **Concept**: The direction of steepest increase in a scalar field.
+    -   **In Code**: `grad(F)` calculates the gradient of the Danger Field.
+    -   **Effect**: Civilians calculate the negative gradient (`-Dx, -Dy`) to run "downhill" away from the peak danger of the cyclone.
+
+2.  **Curl (Rotation)**:
+    -   **Concept**: Measures the rotation or "swirl" of a vector field.
+    -   **In Code**: `wind_field(cx, cy)` creates a vortex where the wind vectors rotate around the center.
+    -   **Effect**: The wind field has a non-zero curl, which pushes civilians sideways, simulating the difficulty of moving in a straight line during a storm.
+
+3.  **Divergence (Expansion/Compression)**:
+    -   **Concept**: Measures whether a field is spreading out (source) or converging (sink).
+    -   **In Code**: While the primary wind field in `diaster_sim.py` is a pure vortex (zero divergence), the secondary script `graph_sims.py` uses divergence to calculate a "Hazard Map".
+    -   **Effect**: Areas with negative divergence (convergence) are treated as high-risk zones where debris or water accumulates.
+
 ## Code Documentation (`diaster_sim.py`)
 
 ### Global Variables & Grid Setup
