@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
-
+ 
 print("Backend:", matplotlib.get_backend())
 
 # -----------------------------
@@ -47,9 +47,9 @@ def danger_field(cx, cy):
     return np.exp(-((X - cx)**2 + (Y - cy)**2) / (R**2))
 
 # gradient of scalar
-def grad(F):
-    Fx = np.gradient(F, axis=1)
-    Fy = np.gradient(F, axis=0)
+def grad(F):#how steep the field is
+    Fx = np.gradient(F, axis=1)# x direction
+    Fy = np.gradient(F, axis=0)# y direction
     return Fx, Fy
 
 # -----------------------------
@@ -68,12 +68,12 @@ def wind_field(cx, cy):
 # Move civilian toward nearest safe corner
 # -----------------------------
 def direction_to_safety(px, py):
-    d = np.sqrt((safe_points[:,0]-px)**2 + (safe_points[:,1]-py)**2)
-    idx = np.argmin(d)
-    tx, ty = safe_points[idx]
-    dx = tx - px
+    d = np.sqrt((safe_points[:,0]-px)**2 + (safe_points[:,1]-py)**2)#calculate distance to each safe point
+    idx = np.argmin(d)#finds the index of the smallest distance 
+    tx, ty = safe_points[idx]#get the coordinates of the nearest safe point
+    dx = tx - px#calculates the direction
     dy = ty - py
-    L = np.sqrt(dx*dx + dy*dy) + 1e-9
+    L = np.sqrt(dx*dx + dy*dy) + 1e-9#calculate length for normalization
     return dx/L, dy/L, np.min(d)  # also return distance to nearest safe point
 
 # -----------------------------
@@ -114,39 +114,39 @@ civ_quiv = ax.quiver(civ_pos[:,0], civ_pos[:,1],
 def update(f):
     global civ_pos, civ_vel, arrived
 
-    t = f * 0.15
-    cx, cy = cyclone_center(t)
+    t = f * 0.15#calculate time
+    cx, cy = cyclone_center(t)#gets cyclone center coordinates
 
     # update danger
-    D = danger_field(cx, cy)
-    im.set_data(D)
+    D = danger_field(cx, cy)#recalculate danger field cerntered on new cyclone position
+    im.set_data(D)#updates the image data with new danger feild
 
     # danger gradient (pushes people away)
-    Dx, Dy = grad(D)
+    Dx, Dy = grad(D)#caluculates gradient of danger field (for the civilians to move away from using negative gradient (-Dx, -Dy))
 
     # wind field (curl)
-    U, V = wind_field(cx, cy)
-    quiv.set_UVC(U[::stride,::stride], V[::stride,::stride])
+    U, V = wind_field(cx, cy)#recalculate wind field centered on new cyclone position
+    quiv.set_UVC(U[::stride,::stride], V[::stride,::stride])#updates the wind vector arrows with new wind field
 
     # move civilians
     for i in range(num_civ):
-        if arrived[i]:
+        if arrived[i]:#skip if already arrived
             civ_vel[i] = np.array([0.0, 0.0])
             continue
 
-        px, py = civ_pos[i]
-        ix = np.argmin(np.abs(x - px))
-        iy = np.argmin(np.abs(y - py))
+        px, py = civ_pos[i]#get civilian position
+        ix = np.argmin(np.abs(x - px))#find closest grid point in x
+        iy = np.argmin(np.abs(y - py))#find closest grid point in y
 
         # move away from cyclone using gradient
         away = np.array([-Dx[iy,ix], -Dy[iy,ix]])
 
         # wind pushes them
-        wind = np.array([U[iy,ix], V[iy,ix]])
+        wind = np.array([U[iy,ix], V[iy,ix]])#gets the wind vector at civilian's grid cell
 
         # move toward safety
-        sx, sy, dist_safe = direction_to_safety(px, py)
-        safety = np.array([sx, sy]) * 0.4
+        sx, sy, dist_safe = direction_to_safety(px, py)#finds nearest safe point by get normalized direction vector and distance
+        safety = np.array([sx, sy]) * 0.4#multiply by some factor to control speed toward safety
 
         # total velocity
         vel = 1.8*away + 0.25*wind + safety
@@ -154,7 +154,7 @@ def update(f):
         civ_vel[i] = vel
 
         # check if reached safe point
-        if dist_safe < 0.05:
+        if dist_safe < 0.05:#If distance to nearest safe zone is less than 0.05 units: SAFE!
             arrived[i] = True
             civ_vel[i] = np.array([0.0, 0.0])
 
