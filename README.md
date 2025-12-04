@@ -1,5 +1,6 @@
 # Cyclone Evacuation Simulation — Presentation Guide
 
+Here's everything you need to explain the simulation clearly and confidently.
 
 ---
 
@@ -147,7 +148,6 @@ away = np.array([-Dx[iy,ix], -Dy[iy,ix]]) # Negative = run DOWNHILL
 
 #### **Force 2: Pushed by Wind (Physics)**
 ```python
-U, V = wind_field(cx, cy)#recalculate wind field centered on new cyclone position
 wind = np.array([U[iy,ix], V[iy,ix]])
 ```
 
@@ -241,7 +241,15 @@ Every frame (35ms):
 
 ---
 
-## **8. INSTALLATION & USAGE**
+## **8. TRY IT ONLINE (Google Colab)**
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1vBRY4k9-1J7SsNw-Jyfi3uIIRpKqIznS?authuser=1#scrollTo=bcd67a94)
+
+Run the simulation directly in your browser — no installation required!
+
+---
+
+## **9. INSTALLATION & USAGE (Local)**
 
 ### **Requirements**
 ```bash
