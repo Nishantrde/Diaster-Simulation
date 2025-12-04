@@ -47,9 +47,11 @@ def danger_field(cx, cy):
     return np.exp(-((X - cx)**2 + (Y - cy)**2) / (R**2))
 
 # gradient of scalar
-def grad(F):
-    Fx = np.gradient(F, axis=1)
-    Fy = np.gradient(F, axis=0)
+#Calculates the Gradient (slope) of a 2D field
+#look for the neighboring points to determine the steepness by their slope
+def grad(F):# F => (2d Array) represents the danger field
+    Fx = np.gradient(F, axis=1)# x direction (right - left)/columns
+    Fy = np.gradient(F, axis=0)# y direction (up - down)/rows
     return Fx, Fy
 
 # -----------------------------
