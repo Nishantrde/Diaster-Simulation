@@ -56,27 +56,45 @@ def grad(F):# F => (2d Array) represents the danger field
 
 # -----------------------------
 # Curl wind field (vortex)
+# Creates a spinning wind pattern around the cyclone center
+# Uses Point Vortex Model from fluid dynamics
+# -----------------------------
+# Arguments:
+#   cx: X-coordinate of cyclone center
+#   cy: Y-coordinate of cyclone center
+# Returns:
+#   u: 2D array of horizontal wind velocities (160x160)
+#   v: 2D array of vertical wind velocities (160x160)
 # -----------------------------
 def wind_field(cx, cy):
-    Xc = X - cx
-    Yc = Y - cy
-    r = np.sqrt(Xc**2 + Yc**2) + 1e-9
-    strength = 1.0
-    u = -strength * (Yc / (r**2))
-    v =  strength * (Xc / (r**2))
-    return u, v
+    Xc = X - cx                          # Horizontal distance from each point to cyclone center
+    Yc = Y - cy                          # Vertical distance from each point to cyclone center
+    r = np.sqrt(Xc**2 + Yc**2) + 1e-9    # Distance from center (+ tiny value to avoid division by zero)
+    strength = 1.0                        # Wind strength multiplier
+    u = -strength * (Yc / (r**2))         # Horizontal wind: u = -Yc/r² (creates rotation)
+    v =  strength * (Xc / (r**2))         # Vertical wind: v = Xc/r² (perpendicular to radius)
+    return u, v                           # Returns wind velocity components
 
 # -----------------------------
 # Move civilian toward nearest safe corner
+# Finds the closest safe zone and returns direction to it
+# -----------------------------
+# Arguments:
+#   px: X-coordinate of civilian position
+#   py: Y-coordinate of civilian position
+# Returns:
+#   dx/L: Normalized X-direction to nearest safe point (unit vector)
+#   dy/L: Normalized Y-direction to nearest safe point (unit vector)
+#   np.min(d): Distance to the nearest safe point
 # -----------------------------
 def direction_to_safety(px, py):
-    d = np.sqrt((safe_points[:,0]-px)**2 + (safe_points[:,1]-py)**2)
-    idx = np.argmin(d)
-    tx, ty = safe_points[idx]
-    dx = tx - px
-    dy = ty - py
-    L = np.sqrt(dx*dx + dy*dy) + 1e-9
-    return dx/L, dy/L, np.min(d)
+    d = np.sqrt((safe_points[:,0]-px)**2 + (safe_points[:,1]-py)**2)  # Distance to each safe point
+    idx = np.argmin(d)                    # Index of closest safe point
+    tx, ty = safe_points[idx]             # Coordinates of closest safe point
+    dx = tx - px                          # X-direction to safe point
+    dy = ty - py                          # Y-direction to safe point
+    L = np.sqrt(dx*dx + dy*dy) + 1e-9     # Length for normalization (+ tiny value to avoid /0)
+    return dx/L, dy/L, np.min(d)          # Return unit vector + distance to nearest safe point
 
 # -----------------------------
 # Matplotlib setup
