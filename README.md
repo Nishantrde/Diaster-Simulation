@@ -44,6 +44,13 @@ We used a **Point Vortex Model** from fluid dynamics:
 
 $$u = -\frac{Y_c}{r^2}, \quad v = \frac{X_c}{r^2}$$
 
+**Where:**
+- **$u$** = Horizontal wind velocity (Left/Right)
+- **$v$** = Vertical wind velocity (Up/Down)
+- **$X_c$** = Horizontal distance from cyclone center (`X - cx`)
+- **$Y_c$** = Vertical distance from cyclone center (`Y - cy`)
+- **$r$** = Distance from cyclone center = $\sqrt{X_c^2 + Y_c^2}$
+
 ```python
 def wind_field(cx, cy):
     Xc = X - cx                          # Horizontal distance to center
