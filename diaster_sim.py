@@ -1,17 +1,19 @@
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
+from matplotlib.animation import FuncAnimation, PillowWriter
  
 print("Backend:", matplotlib.get_backend())
 
 # -----------------------------
 # Grid
 # -----------------------------
-nx, ny = 160, 160
-x = np.linspace(-2, 2, nx)
-y = np.linspace(-2, 2, ny)
-X, Y = np.meshgrid(x, y)
+nx, ny = 160, 160                # Grid resolution (160x160 points)
+x = np.linspace(-2, 2, nx)       # X-axis coordinates from -2 to 2
+y = np.linspace(-2, 2, ny)       # Y-axis coordinates from -2 to 2
+X, Y = np.meshgrid(x, y)         # Create 2D coordinate matrices for vectorized calculations
+                                 # X[i,j] = x-coordinate at point (i,j)
+                                 # Y[i,j] = y-coordinate at point (i,j)
 
 # -----------------------------
 # Cyclone center comes from RIGHT and moves LEFT
@@ -26,9 +28,7 @@ def cyclone_center(t):
 # -----------------------------
 safe_points = np.array([
     [x[0], y[-1]],     # top-left
-    # [x[-1], y[-1]],    # top-right
     [x[0], y[0]],      # bottom-left
-    # [x[-1], y[0]],     # bottom-right
 ])
 
 # -----------------------------
@@ -44,38 +44,37 @@ arrived = np.zeros(num_civ, dtype=bool)  # track who reached safety
 # -----------------------------
 def danger_field(cx, cy):
     R = 3.0   # <-- set your cyclone radius here
-    return np.exp(-((X - cx)**2 + (Y - cy)**2) / (R**2))#gaussian bell curve
-    # results = e ^ - (distance^2 / R^2)   where e is Euler's number 2.71828...   e^-0 = 1, e^-large number = 0
+    return np.exp(-((X - cx)**2 + (Y - cy)**2) / (R**2))
 
 # gradient of scalar
-def grad(F):#how steep the field is
-    Fx = np.gradient(F, axis=1)# x direction (right - left)/columns
-    Fy = np.gradient(F, axis=0)# y direction (up - down)/rows
+def grad(F):
+    Fx = np.gradient(F, axis=1)
+    Fy = np.gradient(F, axis=0)
     return Fx, Fy
 
 # -----------------------------
 # Curl wind field (vortex)
 # -----------------------------
 def wind_field(cx, cy):
-    Xc = X - cx#The horizontal distance from every grid point to the center
-    Yc = Y - cy#The vertical distance from every grid point to the center
-    r = np.sqrt(Xc**2 + Yc**2) + 1e-9#The straight-line distance (radius) from the center
-    strength = 1.0#A constant (1.0) that controls the overall speed of the wind
-    u = -strength * (Yc / (r**2))#The Horizontal Wind Speed
-    v =  strength * (Xc / (r**2))#The Vertical Wind Speed
+    Xc = X - cx
+    Yc = Y - cy
+    r = np.sqrt(Xc**2 + Yc**2) + 1e-9
+    strength = 1.0
+    u = -strength * (Yc / (r**2))
+    v =  strength * (Xc / (r**2))
     return u, v
 
 # -----------------------------
 # Move civilian toward nearest safe corner
 # -----------------------------
 def direction_to_safety(px, py):
-    d = np.sqrt((safe_points[:,0]-px)**2 + (safe_points[:,1]-py)**2)#calculate distance to each safe point
-    idx = np.argmin(d)#finds the index of the smallest distance 
-    tx, ty = safe_points[idx]#get the coordinates of the nearest safe point
-    dx = tx - px#calculates the direction
+    d = np.sqrt((safe_points[:,0]-px)**2 + (safe_points[:,1]-py)**2)
+    idx = np.argmin(d)
+    tx, ty = safe_points[idx]
+    dx = tx - px
     dy = ty - py
-    L = np.sqrt(dx*dx + dy*dy) + 1e-9#calculate length for normalization
-    return dx/L, dy/L, np.min(d)  # also return distance to nearest safe point
+    L = np.sqrt(dx*dx + dy*dy) + 1e-9
+    return dx/L, dy/L, np.min(d)
 
 # -----------------------------
 # Matplotlib setup
@@ -98,16 +97,20 @@ quiv = ax.quiver(X[::stride,::stride], Y[::stride,::stride],
 
 # Safe corners
 ax.scatter(safe_points[:,0], safe_points[:,1],
-           s=120, c="lime", edgecolors="black")
+           s=120, c="lime", edgecolors="black", label="Safe Zones")
 
 # Civilians
 civ_scatter = ax.scatter(civ_pos[:,0], civ_pos[:,1],
-                         c="white", s=45, edgecolors="black")
+                         c="white", s=45, edgecolors="black", label="Civilians")
 
 # Quiver for civilians — bigger & more visible
 civ_quiv = ax.quiver(civ_pos[:,0], civ_pos[:,1],
                      civ_vel[:,0], civ_vel[:,1],
                      color="white", scale=5, width=0.008)
+
+ax.set_xlim(-2, 2)
+ax.set_ylim(-2, 2)
+ax.legend(loc="upper right", fontsize=10)
 
 # -----------------------------
 # Animation
@@ -115,39 +118,39 @@ civ_quiv = ax.quiver(civ_pos[:,0], civ_pos[:,1],
 def update(f):
     global civ_pos, civ_vel, arrived
 
-    t = f * 0.15#calculate time
-    cx, cy = cyclone_center(t)#gets cyclone center coordinates
+    t = f * 0.15
+    cx, cy = cyclone_center(t)
 
     # update danger
-    D = danger_field(cx, cy)#recalculate danger field cerntered on new cyclone position
-    im.set_data(D)#updates the image data with new danger feild
+    D = danger_field(cx, cy)
+    im.set_data(D)
 
     # danger gradient (pushes people away)
-    Dx, Dy = grad(D)#caluculates gradient of danger field (for the civilians to move away from using negative gradient (-Dx, -Dy))
+    Dx, Dy = grad(D)
 
     # wind field (curl)
-    U, V = wind_field(cx, cy)#recalculate wind field centered on new cyclone position
-    quiv.set_UVC(U[::stride,::stride], V[::stride,::stride])#updates the wind vector arrows with new wind field
+    U, V = wind_field(cx, cy)
+    quiv.set_UVC(U[::stride,::stride], V[::stride,::stride])
 
     # move civilians
     for i in range(num_civ):
-        if arrived[i]:#skip if already arrived
+        if arrived[i]:
             civ_vel[i] = np.array([0.0, 0.0])
             continue
 
-        px, py = civ_pos[i]#get civilian position
-        ix = np.argmin(np.abs(x - px))#find closest grid point in x
-        iy = np.argmin(np.abs(y - py))#find closest grid point in y
+        px, py = civ_pos[i]
+        ix = np.argmin(np.abs(x - px))
+        iy = np.argmin(np.abs(y - py))
 
         # move away from cyclone using gradient
         away = np.array([-Dx[iy,ix], -Dy[iy,ix]])
 
         # wind pushes them
-        wind = np.array([U[iy,ix], V[iy,ix]])#gets the wind vector at civilian's grid cell
+        wind = np.array([U[iy,ix], V[iy,ix]])
 
         # move toward safety
-        sx, sy, dist_safe = direction_to_safety(px, py)#finds nearest safe point by get normalized direction vector and distance
-        safety = np.array([sx, sy]) * 0.4#multiply by some factor to control speed toward safety
+        sx, sy, dist_safe = direction_to_safety(px, py)
+        safety = np.array([sx, sy]) * 0.4
 
         # total velocity
         vel = 1.8*away + 0.25*wind + safety
@@ -155,7 +158,7 @@ def update(f):
         civ_vel[i] = vel
 
         # check if reached safe point
-        if dist_safe < 0.05:#If distance to nearest safe zone is less than 0.05 units: SAFE!
+        if dist_safe < 0.05:
             arrived[i] = True
             civ_vel[i] = np.array([0.0, 0.0])
 
@@ -163,14 +166,20 @@ def update(f):
     civ_quiv.set_offsets(civ_pos)
     civ_quiv.set_UVC(civ_vel[:,0], civ_vel[:,1])
 
-    ax.set_title(f"Cyclone Evacuation — Cyclone entering from RIGHT → LEFT  t={t:.2f}")
+    # Count who arrived
+    num_arrived = np.sum(arrived)
+    
+    ax.set_title(f"Cyclone Evacuation | t={t:.2f}s | Evacuated: {num_arrived}/{num_civ}")
     return im, quiv, civ_scatter, civ_quiv
 
-ani = FuncAnimation(fig, update, frames=400, interval=35, blit=False)
+# Create animation with fewer frames for faster GIF generation
+print("Generating animation frames...")
+ani = FuncAnimation(fig, update, frames=200, interval=50, blit=False)
 
-backend = matplotlib.get_backend().lower()
-if backend.startswith("agg"):
-    ani.save("civilian_vectors_safe.mp4", fps=30, dpi=130)
-    print("Saved: civilian_vectors_safe.mp4")
-else:
-    plt.show()
+# Save as GIF using PillowWriter
+print("Saving as GIF (this may take a moment)...")
+writer = PillowWriter(fps=10)  # 10 frames per second
+ani.save("cyclone_evacuation.gif", writer=writer)
+print("✓ Saved: cyclone_evacuation.gif")
+
+plt.close()
