@@ -148,6 +148,7 @@ away = np.array([-Dx[iy,ix], -Dy[iy,ix]]) # Negative = run DOWNHILL
 
 #### **Force 2: Pushed by Wind (Physics)**
 ```python
+U, V = wind_field(cx, cy)#recalculate wind field centered on new cyclone position
 wind = np.array([U[iy,ix], V[iy,ix]])
 ```
 
