@@ -1,6 +1,5 @@
 # Cyclone Evacuation Simulation — Presentation Guide
 
-Here's everything you need to explain the simulation clearly and confidently.
 
 ---
 
