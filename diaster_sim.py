@@ -44,24 +44,25 @@ arrived = np.zeros(num_civ, dtype=bool)  # track who reached safety
 # -----------------------------
 def danger_field(cx, cy):
     R = 3.0   # <-- set your cyclone radius here
-    return np.exp(-((X - cx)**2 + (Y - cy)**2) / (R**2))
+    return np.exp(-((X - cx)**2 + (Y - cy)**2) / (R**2))#gaussian bell curve
+    # results = e ^ - (distance^2 / R^2)   where e is Euler's number 2.71828...   e^-0 = 1, e^-large number = 0
 
 # gradient of scalar
 def grad(F):#how steep the field is
-    Fx = np.gradient(F, axis=1)# x direction
-    Fy = np.gradient(F, axis=0)# y direction
+    Fx = np.gradient(F, axis=1)# x direction (right - left)/columns
+    Fy = np.gradient(F, axis=0)# y direction (up - down)/rows
     return Fx, Fy
 
 # -----------------------------
 # Curl wind field (vortex)
 # -----------------------------
 def wind_field(cx, cy):
-    Xc = X - cx
-    Yc = Y - cy
-    r = np.sqrt(Xc**2 + Yc**2) + 1e-9
-    strength = 1.0
-    u = -strength * (Yc / (r**2))
-    v =  strength * (Xc / (r**2))
+    Xc = X - cx#The horizontal distance from every grid point to the center
+    Yc = Y - cy#The vertical distance from every grid point to the center
+    r = np.sqrt(Xc**2 + Yc**2) + 1e-9#The straight-line distance (radius) from the center
+    strength = 1.0#A constant (1.0) that controls the overall speed of the wind
+    u = -strength * (Yc / (r**2))#The Horizontal Wind Speed
+    v =  strength * (Xc / (r**2))#The Vertical Wind Speed
     return u, v
 
 # -----------------------------
