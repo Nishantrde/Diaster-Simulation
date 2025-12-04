@@ -35,7 +35,7 @@ safe_points = np.array([
 # Civilians
 # -----------------------------
 num_civ = 30
-civ_pos = np.random.uniform(-1.0, 1.0, (num_civ, 2))
+civ_pos = np.random.uniform(-1.0, 1.0, (num_civ, 2))# crating the starting point of civilians
 civ_vel = np.zeros_like(civ_pos)  # store velocity for arrows
 arrived = np.zeros(num_civ, dtype=bool)  # track who reached safety
 
